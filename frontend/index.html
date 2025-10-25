@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MLOps for ChatOps - Prototype</title>
+  
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
+
+  <style>
+    :root {
+      --primary-color: #007bff;
+      --light-blue: #e0f3ff;
+      --background-color: rgb(192, 193, 255);
+      --card-bg: #ffffff;
+      --text-color: #212529;
+      --muted-text: #6c757d;
+      --border-color: #dee2e6;
+    }
+
+    body { 
+      background: var(--background-color);
+      font-family: 'Poppins', sans-serif;
+      color: var(--text-color);
+    }
+
+    .hero { 
+      background: linear-gradient(90deg, var(--light-blue), #fdfeff); 
+      border-radius: 1rem; 
+      padding: 3rem 2rem;
+      border: 1px solid #d6edff;
+    }
+    .hero h1 {
+      font-weight: 700;
+      color: #0c5a91;
+    }
+
+    .card {
+      border: 1px solid var(--border-color);
+      border-radius: 0.75rem;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+      transition: all 0.3s ease-in-out;
+      height: 100%;
+    }
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+    }
+
+    .card-header {
+      background-color: #f7f9fc;
+      font-weight: 600;
+      border-bottom: 1px solid var(--border-color);
+    }
+    .card-header i {
+      color: var(--primary-color);
+      margin-right: 0.75rem;
+    }
+
+    .btn-primary { background-color: var(--primary-color); border: none; }
+    .btn-success { background-color: #198754; border: none; }
+    
+    #output-window { 
+      height: 350px; 
+      overflow-y: auto; 
+      background: #f7f9fc; 
+      font-size: 0.8rem;
+    }
+    #output-window .output-item {
+      padding: 0.75rem;
+      border-bottom: 1px solid #e9ecef;
+      word-wrap: break-word;
+    }
+    #output-window .output-item:last-child { border-bottom: none; }
+
+    .output-item.text-success { 
+      background-color: rgba(25, 135, 84, 0.05);
+      color: #146c43;
+    }
+    .output-item.text-danger { 
+      background-color: rgba(220, 53, 69, 0.05);
+      color: #b02a37;
+    }
+    #datasetList { list-style-type: none; padding-left: 0; }
+    #datasetList li { padding: 0.2rem 0; font-size: 0.9rem; }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: #f1f1f1; }
+    ::-webkit-scrollbar-thumb { background: #ccc; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #aaa; }
+  </style>
+</head>
+<body>
+<div class="container py-5">
+  <div class="hero mb-5 text-center">
+    <h1>MLOps for ChatOps</h1>
+    <p class="lead text-muted">Upload a dataset and train a model using a simple, interactive UI.</p>
+  </div>
+
+  <div class="row g-4">
+    <div class="col-md-4">
+      <div class="card">
+        <div class="card-header"><i class="fas fa-database"></i> Data Collection & Preparation</div>
+        <div class="card-body">
+          <label for="fileInput" class="form-label">Choose CSV File</label>
+          <input type="file" id="fileInput" accept=".csv" class="form-control mb-3" />
+          <div class="d-grid">
+            <button id="uploadBtn" class="btn btn-primary">Upload</button>
+          </div>
+          <div id="datasetInfo" class="mt-3 text-muted small bg-light p-2 rounded"></div>
+          <hr />
+          <h6><i class="fas fa-list-ul"></i> Available Datasets</h6>
+          <ul id="datasetList"></ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <div class="card">
+        <div class="card-header"><i class="fas fa-cogs"></i> Model Training</div>
+        <div class="card-body">
+          <div class="mb-3">
+            <label for="datasetSelect" class="form-label">Dataset</label>
+            <select id="datasetSelect" class="form-select"></select>
+          </div>
+          <div class="mb-3">
+            <label for="targetColumn" class="form-label">Target Column</label>
+            <input id="targetColumn" class="form-control" placeholder="e.g., target or Salary_USD" />
+          </div>
+          <div class="mb-3">
+            <label for="modelType" class="form-label">Model</label>
+            <select id="modelType" class="form-select">
+              <option>Linear Regression</option>
+              <option>Logistic Regression</option>
+              <option>Decision Tree</option>
+              <option>SVM</option>
+              <option>LightGBM</option>
+            </select>
+          </div>
+          <div class="d-grid">
+            <button id="trainBtn" class="btn btn-success"><i class="fas fa-play"></i> Train Model</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <div class="card">
+        <div class="card-header"><i class="fas fa-terminal"></i> Output</div>
+        <div class="card-body p-2">
+          <div id="output-window" class="border rounded">
+            <div class="output-item text-muted">Awaiting training results...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const API_BASE = 'http://127.0.0.1:5001/api';
+const outputWindow = document.getElementById('output-window');
+const datasetSelect = document.getElementById('datasetSelect');
+const datasetInfo = document.getElementById('datasetInfo');
+
+// Function to add a message to the output window
+function logToOutput(message, isError = false) {
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `output-item ${isError ? 'text-danger' : 'text-success'}`;
+    messageDiv.innerHTML = message; // Use innerHTML to render bold tags etc.
+    outputWindow.prepend(messageDiv); // Prepend to show newest at the top
+}
+
+// Function to get and display columns
+async function showColumnsForDataset(filename) {
+    if (!filename) {
+        datasetInfo.innerHTML = '';
+        return;
+    }
+    try {
+        const res = await fetch(`${API_BASE}/datasets/${filename}/columns`);
+        const data = await res.json();
+        if (data.error) {
+            datasetInfo.innerHTML = `<span class="text-danger">${data.error}</span>`;
+        } else {
+            datasetInfo.innerHTML = `<strong>Columns:</strong><br/> ${data.columns.join(', ')}`;
+        }
+    } catch (err) {
+        datasetInfo.innerHTML = `<span class="text-danger">Could not fetch columns.</span>`;
+    }
+}
+
+// Function to list all available datasets
+async function listDatasets(){
+  const res = await fetch(API_BASE + '/datasets');
+  const data = await res.json();
+  const list = document.getElementById('datasetList');
+  list.innerHTML=''; datasetSelect.innerHTML='';
+  data.datasets.forEach(d => {
+    const li = document.createElement('li'); li.textContent = d; list.appendChild(li);
+    const opt = document.createElement('option'); opt.value=d; opt.textContent=d; datasetSelect.appendChild(opt);
+  });
+  if (data.datasets.length > 0) {
+      await showColumnsForDataset(data.datasets[0]);
+  }
+}
+
+// Event Listeners
+datasetSelect.addEventListener('change', (event) => {
+    showColumnsForDataset(event.target.value);
+});
+
+document.getElementById('uploadBtn').addEventListener('click', async ()=>{
+  const file = document.getElementById('fileInput').files[0];
+  if(!file){ alert('Select a CSV first'); return; }
+  const fd = new FormData(); fd.append('file', file);
+  logToOutput(`<strong>Uploading:</strong> ${file.name}`);
+  const res = await fetch(API_BASE + '/datasets/upload', { method: 'POST', body: fd });
+  const data = await res.json();
+  await listDatasets(); // Refresh the lists
+  logToOutput(`<strong>Uploaded successfully:</strong> ${data.filename}`);
+});
+
+document.getElementById('trainBtn').addEventListener('click', async ()=>{
+  const dataset = document.getElementById('datasetSelect').value;
+  const target = document.getElementById('targetColumn').value;
+  const model_type = document.getElementById('modelType').value;
+  if(!dataset || !target){ alert('Please select a dataset and specify a target column.'); return; }
+
+  logToOutput(`<strong>Training starting...</strong><br>Model: ${model_type}<br>Dataset: ${dataset}`);
+  
+  try {
+    const res = await fetch(API_BASE + '/train', {
+      method: 'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({dataset, target, model_type})
+    });
+    const data = await res.json();
+    if (data.error) { throw new Error(data.error); }
+    
+    let metricsHtml = '<ul>';
+    for (const [key, value] of Object.entries(data.metrics)) {
+        metricsHtml += `<li><strong>${key.replace('_', ' ')}:</strong> ${value}</li>`;
+    }
+    metricsHtml += '</ul>';
+
+    const successMessage = `<strong>Training complete!</strong><br>
+                            Model saved as: <strong>${data.model_name}</strong><br>
+                            <strong>Metrics:</strong>${metricsHtml}`;
+    logToOutput(successMessage);
+
+  } catch (err) {
+    logToOutput(`<strong>Training Failed:</strong> ${err.message}`, true);
+  }
+});
+
+// Initial load
+listDatasets();
+</script>
+</body>
+</html>

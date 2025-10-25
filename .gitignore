@@ -1,0 +1,15 @@
+# Virtual Environment
+venv/
+.venv/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Generated models and uploaded data
+backend/models/
+uploads/
+
+# IDE specific files
+.vscode/
+.idea/
