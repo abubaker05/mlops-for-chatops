@@ -3,7 +3,7 @@ from flask_cors import CORS
 import os
 import pandas as pd
 import joblib
-from ml.trainer import train_model
+from backend.ml.trainer import train_model
 from deploy import deploy_model
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
